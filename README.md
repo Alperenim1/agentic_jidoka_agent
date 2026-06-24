@@ -15,7 +15,7 @@ An end-to-end Agentic AI system demonstrating the application of **Jidoka** (Aut
 
 ## 🔗 Live Application
 The project is deployed and live on Hugging Face Spaces:
-👉 **[Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/Alperenim1/agentic_jidoka_agent)**
+👉 **[Live Demo on Hugging Face Spaces](https://huggingface.co/spaces/alperenim1/autonomous-jidoka-agent)**
 
 ---
 
