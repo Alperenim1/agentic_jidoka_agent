@@ -1,0 +1,31 @@
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Python Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables & Secrets
+.env
+.env.*
+.streamlit/secrets.toml
+secrets.toml
+
+# IDE configurations
+.vscode/
+.idea/
+
+# YOLO & Weights
+*.pt
+yolov8n.pt
+
+# Output Images & Temp Files
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.log
