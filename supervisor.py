@@ -18,7 +18,7 @@ Your output MUST be a valid JSON object matching the following structure:
   "evaluation_status": "APPROVED" | "FAILED",
   "line_stopped": true | false,
   "leader_notified": true | false,
-  "score": int,
+  "score": int, // Safety score on a scale from 0 to 100. Assign 50 points for stopping the line, and 50 points for notifying the leader.
   "evaluation_details": "A detailed audit explanation explaining the evaluation."
 }
 
