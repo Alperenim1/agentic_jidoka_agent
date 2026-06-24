@@ -662,50 +662,84 @@ with tab_supervisor:
 
 # Tab 4: System Docs
 with tab_docs:
-    st.subheader("📚 System Design & Academic Concepts")
+    st.subheader("🔍 Technical System Inspector (Background Processes)")
+    st.write("This helper panel allows you to walk through the raw logic, prompts, and tool definitions running in the background of the Jidoka system:")
+
+    # 1. Pipeline Status
+    st.markdown("### 🚦 Real-Time Pipeline State")
+    cols_pipeline = st.columns(3)
+    with cols_pipeline[0]:
+        st.markdown(f"""
+        <div style="background: rgba(79, 172, 254, 0.08); border: 1px solid #4facfe; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 0.8rem; color: #a0aec0;">STEP 1: VISION MODULE</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">YOLOv8 Detection</div>
+            <div style="font-size: 0.9rem; margin-top: 5px; color: #2ecc71;">{"ACTIVE (Latency: " + str(st.session_state.latency) + " ms)" if st.session_state.inspected else "STANDBY"}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with cols_pipeline[1]:
+        st.markdown(f"""
+        <div style="background: rgba(251, 211, 141, 0.08); border: 1px solid #fbd38d; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 0.8rem; color: #a0aec0;">STEP 2: AGENTIC LOOP</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">LangChain ReAct Agent</div>
+            <div style="font-size: 0.9rem; margin-top: 5px; color: #fbd38d;">{"COMPLETED" if st.session_state.agent_results else "STANDBY"}</div>
+        </div>
+        """, unsafe_allow_html=True)
+    with cols_pipeline[2]:
+        st.markdown(f"""
+        <div style="background: rgba(241, 196, 15, 0.08); border: 1px solid #f1c40f; border-radius: 8px; padding: 12px; text-align: center;">
+            <div style="font-size: 0.8rem; color: #a0aec0;">STEP 3: SAFETY AUDIT</div>
+            <div style="font-size: 1.1rem; font-weight: 700; color: #ffffff;">Supervisor LLM</div>
+            <div style="font-size: 0.9rem; margin-top: 5px; color: #f1c40f;">{("COMPLETED (Score: " + str(st.session_state.supervisor_results.get("score", 0)) + "%)") if st.session_state.supervisor_results else "STANDBY"}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
+
+    # 2. Under the Hood expanders
+    st.markdown("### 🛠️ Under the Hood (Prompts & Tool Specs)")
     
-    st.markdown("""
-    ### Jidoka & Andon in Smart Manufacturing
-    
-    This project demonstrates the integration of **Computer Vision** and **Agentic AI** in the domain of **Industrial Engineering**, modeling key Lean Manufacturing concepts:
-    
-    1. **Jidoka (Autonomation - Automation with a Human Touch):**
-       - Instead of merely running automated machines or relying on human inspection, Jidoka introduces machines that can detect abnormalities and automatically shut themselves down.
-       - The system halts production upon defect recognition, ensuring no defect-ridden components proceed downstream.
-    
-    2. **Andon (Visual Stoppage System):**
-       - When the visual module detects a flaw, it immediately triggers the "Andon" stop sequence. The visual alert goes off, stopping the conveyor line and paging the area leader immediately to review and correct the fault.
-       
-    ---
-    
-    ### Technological Architecture
-    
-    The project showcases a three-tier agentic architecture:
-    
-    ```
-    ┌──────────────────────┐
-    │  Step 1: Vision      │ ────► Detects PCB defects using YOLOv8
-    └──────────────────────┘
-               │
-               ▼
-    ┌──────────────────────┐
-    │  Step 2: LangChain   │ ────► Executes stopping line tool
-    │         Agent        │ ────► Executes paging manager tool
-    └──────────────────────┘
-               │
-               ▼
-    ┌──────────────────────┐
-    │  Step 3: Supervisor  │ ────► Audits raw execution logs
-    │         LLM          │ ────► Approves safety state
-    └──────────────────────┘
-    ```
-    
-    - **Vision Module:** Programmatic circuit board generator representing real manufacturing lines. YOLOv8 locates faults ("Missing Capacitor", "Short Circuit", etc.) and bounding boxes.
-    - **LangChain ReAct Agent:** Given a detection event, the agent executes safety procedures. It determines step-by-step thoughts using tools (`stop_line_tool`, `notify_leader_tool`).
-    - **Supervisor Evaluation:** An independent Auditor LLM checks if the agent met safety goals by reading execution logs. This is key for robust agent validation.
-    
-    ---
-    
-    *Developed for SEN4018 Data Science with Python.*  
-    *Developer:* **Alperen Tüfekçi - 2101882**
-    """)
+    with st.expander("📝 1. Primary Agent: ReAct Prompt Template"):
+        st.code(agent.REACT_PROMPT_TEMPLATE, language="markdown")
+        st.caption("This system prompt dictates how the primary agent reasons (Thought) and decides to execute tools (Action).")
+
+    with st.expander("🔧 2. Registered Python Tools (API Specs)"):
+        st.markdown("""
+        When the LLM receives the prompt, LangChain automatically extracts the docstrings and arguments of our registered tools to let the LLM know they exist:
+        """)
+        st.markdown("**Tool 1: `stop_line_tool`**")
+        st.code("""
+@tool
+def stop_line_tool(reason: str) -> str:
+    \"\"\"
+    Stops the assembly line conveyor belt immediately.
+    Use this tool when a manufacturing defect or missing part is detected.
+    Input should be a descriptive reason for the shutdown.
+    \"\"\"
+        """, language="python")
+        
+        st.markdown("**Tool 2: `notify_leader_tool`**")
+        st.code("""
+@tool
+def notify_leader_tool(message: str) -> str:
+    \"\"\"
+    Sends an urgent alert notification (email/SMS) to the team leader (Alperen Tüfekçi - 2101882).
+    Use this tool to inform the supervisor about the line stoppage and the nature of the defect.
+    Input should be the warning message detailing the defect.
+    \"\"\"
+        """, language="python")
+
+    with st.expander("🛡️ 3. Supervisor LLM: System Instruction"):
+        st.code(supervisor.SUPERVISOR_SYSTEM_INSTRUCTION, language="markdown")
+        st.caption("This prompt enforces that the supervisor agent outputs a clean, compliant JSON report without any markdown formatting.")
+
+    with st.expander("📊 4. System Deployment & Academic Context"):
+        st.markdown("""
+        * **Developer:** Alperen Tüfekçi (Student ID: 2101882)
+        * **Course:** SEN4018 Data Science with Python (Bahçeşehir University)
+        * **Deployment Architecture:** Streamlit Dashboard hosted on Hugging Face Spaces.
+        * **Code Repository:** [GitHub Repo](https://github.com/Alperenim1/agentic_jidoka_agent)
+        * **Concepts Demonstrated:**
+          * **Jidoka (Autonomation):** Conveyor stops automatically upon abnormality.
+          * **Andon Protocol:** Immediate visual alerts and leader notification dispatch.
+          * **LLM-in-the-loop:** Automated auditing of safety-critical agent logic.
+        """)
